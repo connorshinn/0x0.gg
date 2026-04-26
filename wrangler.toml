@@ -1,0 +1,48 @@
+name = "0x0"
+main = "src/index.ts"
+compatibility_date = "2024-05-12"
+workers_dev = true
+
+preview_urls = true
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
+# ── Upload retention ──
+# Uploaded links expire after this many hours. The Worker invalidates expired
+# links on access and the scheduled trigger deletes expired R2 objects.
+[vars]
+UPLOAD_TTL_HOURS = "168"
+
+[triggers]
+crons = ["0 * * * *"]
+
+# ── R2 bucket for file storage ──
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "0x0-files"
+
+# ── KV namespace for metadata + IP allowlist ──
+[[kv_namespaces]]
+binding = "KV"
+id = "63285922be49404d8f299fff02038ac3"
+
+# ── Secrets (set via `wrangler secret put`) ──
+# PASSWORD - upload password
+
+# ── Custom domains ──
+# Keep routes out of this template so one-click deploys use workers.dev and do
+# not try to bind to the maintainer's domain. Add custom domains in the
+# Cloudflare dashboard after deploy.

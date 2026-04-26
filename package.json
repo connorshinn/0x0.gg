@@ -1,0 +1,32 @@
+{
+  "name": "0x0",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "setup": "node setup.mjs"
+  },
+  "cloudflare": {
+    "bindings": {
+      "PASSWORD": {
+        "description": "Password required to authorize an IP before uploading."
+      },
+      "UPLOAD_TTL_HOURS": {
+        "description": "Number of hours uploaded links remain valid before the Worker expires and deletes them."
+      }
+    }
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240512.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^4.85.0"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.1",
+    "highlightjs-curl": "^1.3.0",
+    "highlightjs-iptables": "git+https://github.com/highlightjs/highlightjs-iptables.git",
+    "highlightjs-terraform": "git+https://github.com/highlightjs/highlightjs-terraform.git",
+    "highlightjs-vba": "^0.2.1"
+  }
+}

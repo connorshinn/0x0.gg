@@ -1,0 +1,3 @@
+# Local development values for `wrangler dev`.
+# Run `node setup.mjs` to generate a strong password.
+PASSWORD=
