@@ -15,7 +15,7 @@ A minimal, self-hosted file hosting service modeled after 0x0.st and hosted on *
 - **Upload via CURL or Custom Command**: supports uploading via standard CURL command (e.g., `curl -sF "file=@$1" https://your-worker.workers.dev/`), with option to setup a simplified command (e.g., `0x0 ./wrangler.toml`)
 - **Short URLs**: sequential 3-character IDs are provided to simplify URL syntax.
 
-## File Viewer
+### File Viewer
 - **Syntax highlighting**: leverages highlight.js to automatically format common file types
 - **Robust code viewer**: line numbers, word wrap toggle, zoom (Ctrl+/−), search (Ctrl+F), select all (code only)
 - **Format toggle** — pretty-prints inline JSON, XML, and key=value pairs in logs
