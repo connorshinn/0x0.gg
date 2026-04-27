@@ -1,123 +1,75 @@
 # 0x0
 
-A minimal, self-hosted file hosting service on **Cloudflare Workers + R2 + KV**. Upload files, paste text, pipe command output — get a short URL with a syntax-highlighted viewer.
+A minimal, self-hosted file hosting service modeled after 0x0.st and hosted on **Cloudflare Workers + R2 + KV**. Upload files, paste text, or pipe command output and get a short URL to view the output in your browser.
 
-Runs entirely on the Cloudflare free tier.
+![](Screenshot.png "Example of Uploaded File Rendered in 0x0.gg")
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/connorshinn/0x0.gg)
+## Key Features
 
-## Features
+### Security
+- **IP-based auth**: to prevent unauthorized uploads, 0x0.gg includes a one-time authorization per IP address.
+- **Rate limiting**: auto-bans IPs after 5 failed password attempts (24h ban)
+- **Configurable retention**: includes a variable to control when links expire (and uploaded files are deleted)
 
-- **IP-based auth** — authorize once per network, upload freely after
-- **Rate limiting** — auto-bans IPs after 5 failed password attempts (24h ban)
-- **Short URLs** — sequential 3-character IDs (`000` → `zzz`, 37k+ URLs)
-- **Syntax highlighting** — highlight.js with the StackOverflow Dark theme
-- **Code viewer** — line numbers, word wrap toggle, zoom (Ctrl+/−), search (Ctrl+F), select all (code only)
+### Upload Process:
+- **Upload via CURL or Custom Command**: supports uploading via standard CURL command (e.g., `curl -sF "file=@$1" https://your-worker.workers.dev/`), with option to setup a simplified command (e.g., `0x0 ./wrangler.toml`)
+- **Short URLs**: sequential 3-character IDs are provided to simplify URL syntax.
+
+## File Viewer
+- **Syntax highlighting**: leverages highlight.js to automatically format common file types
+- **Robust code viewer**: line numbers, word wrap toggle, zoom (Ctrl+/−), search (Ctrl+F), select all (code only)
 - **Format toggle** — pretty-prints inline JSON, XML, and key=value pairs in logs
 - **URL linkification** — clickable URLs in code
-- **Pipe support** — pipe command output directly with auto-detected language
 - **Image preview** — inline image viewer for image uploads
 - **Raw / download** — `/raw` and `/dl` endpoints for every file
-- **Configurable retention** — `UPLOAD_TTL_HOURS` controls when links expire and R2 files are deleted
 
 ## One-Click Deploy
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/connorshinn/0x0.gg)
+
+
+Click the button above to deploy to your Cloudflare account. Configuration page allows you to modify key settings prior to deployment.  
+
+<img src="cf_deploy.png" width="480">
 
 Click the button above to deploy to your Cloudflare account. Cloudflare will automatically provision the R2 bucket and KV namespace.
 
-After deploying, set your upload password secret:
+### Custom Domain
+- Once deployment is complete, you can access your application using the URL provided by Cloudflare (which is based on the project name you set during configuration). For example: `0x0.connor-shinn.workers.dev`
 
-```bash
-# 1. Clone your new repo and generate a strong password
-node setup.mjs
+- If desired, you can also setup your own domain:  
+  - Purchase a custom domain from any registrar and add it to Cloudflare
+  - Once added, navigate to the [Workers page](https://dash.cloudflare.com/?to=/:account/workers-and-pages) in Cloudflare and select your worker
+  - Click Settings at the top of the page, then press "Add" at the top of the "Domains & Routes" section. 
+  - Click "Custom Domain" in the sidebar that appears, and then enter your domain. 
+  - Once your domain is added, click the "Add" button again, but select "Route" instead. On the next page, select your domain from the Zone dropdown, and then enter `[YourDomain]/*` as the Route (e.g., `0x0.gg/*`). Finish by clicking "Add Route" at the bottom of the sidebar
+  - Confirm the domain is working by opening the domain name in a new tab (e.g., `http://0x0.gg`). If you see a landing page, everything is setup and ready to go. 
 
-# 2. Set the secret on your Worker
-npx wrangler secret put PASSWORD
-# paste the password from step 1
-```
 
-Uploads expire after `UPLOAD_TTL_HOURS` hours. The default is `168` hours in `wrangler.toml`.
 
-## Manual Setup
-
-### 1. Install dependencies
-
-```bash
-npm install
-```
-
-### 2. Create R2 bucket and KV namespace
-
-```bash
-wrangler r2 bucket create 0x0-files
-wrangler kv namespace create KV
-```
-
-Copy the KV namespace ID into `wrangler.toml`.
-
-### 3. Configure retention
-
-Set `UPLOAD_TTL_HOURS` in `wrangler.toml`:
-
-```toml
-[vars]
-UPLOAD_TTL_HOURS = "168"
-```
-
-The scheduled Worker trigger deletes expired R2 files:
-
-```toml
-[triggers]
-crons = ["0 * * * *"]
-```
-
-### 4. Set password
-
-```bash
-npm run setup
-
-wrangler secret put PASSWORD
-# paste the password value
-```
-
-### 5. Deploy
-
-```bash
-wrangler deploy
-```
-
-### 6. Custom domain (optional)
-
-Deploy first using the default `workers.dev` URL. To use your own domain, the domain must already be active in your Cloudflare account.
-
-In Cloudflare, open your Worker and add the domain from:
-
-`Settings` → `Domains & Routes` → `Add` → `Custom Domain`
-
-Custom domains are intentionally not stored in `wrangler.toml`, so this template can be deployed by anyone without trying to bind to `0x0.gg`.
-
-## Usage
+## Using the Program
 
 ### Authorize
+- Prior to uploading files, you will need to authenticate your IP address using the command below. Replace `[PASSWORD]` with the password you set when you initially configured the app in Cloudflare, and `[WORKER_URL]` with your actual worker URL or custom domain URL. 
 
 ```bash
-curl -d "p=YOUR_PASSWORD" https://your-worker.workers.dev/auth
+curl -d "p=[PASSWORD]" [WORKER_URL]/auth
 ```
 
 ### Upload a file
 
 ```bash
-curl -F "file=@photo.png" https://your-worker.workers.dev/
+curl -F "file=@photo.png" [WORKER_URL]
 ```
 
 ### Pipe stdin
 
 ```bash
-echo "hello world" | curl -sF file=@- https://your-worker.workers.dev/
+docker logs my-app | curl -sF "file=@-" [WORKER_URL]
 ```
 
 ### Pipe command output or upload a file
 
-Add this to your `.bashrc` / `.zshrc`:
+- Optionally, add this to your `.bashrc` / `.zshrc`:
 
 ```bash
 0x0() {
@@ -138,21 +90,12 @@ Then:
 0x0 cat /var/log/syslog
 ```
 
-For command output, the command name appears in the viewer toolbar.
-
 ### Delete a file
 
 ```bash
-curl -X DELETE https://your-worker.workers.dev/abc
+curl -X DELETE [WORKER_URL]/abc
 ```
 
-### View, raw, and download
-
-```
-https://your-worker.workers.dev/abc      # viewer
-https://your-worker.workers.dev/abc/raw  # raw content
-https://your-worker.workers.dev/abc/dl   # download
-```
 
 ## Architecture
 
@@ -170,4 +113,4 @@ On Cloudflare's free tier:
 - **R2**: 10 GB storage, no egress fees
 - **KV**: 100k reads/day, 1k writes/day
 
-For personal use, this is effectively **free**.
+For personal use, this is effectively **free**
